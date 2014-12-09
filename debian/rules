@@ -1,5 +1,8 @@
 #!/usr/bin/make -f
 
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
+
 export PYBUILD_NAME=click
 export PYBUILD_TEST_PYTEST=1
 export PYBUILD_TEST_ARGS={dir}/tests/

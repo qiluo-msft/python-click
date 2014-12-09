@@ -1,3 +1,9 @@
+python-click (3.3-2) unstable; urgency=low
+
+  * Set UTF-8 before building (Closes: #772605)
+
+ -- Alexandre Viau <alexandre@alexandreviau.net>  Tue, 09 Dec 2014 00:22:06 -0500
+
 python-click (3.3-1) unstable; urgency=low
 
   * Initial release (Closes: #764953)
