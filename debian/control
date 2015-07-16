@@ -4,8 +4,6 @@ Homepage: https://github.com/mitsuhiko/click
 Vcs-Git: git://anonscm.debian.org/collab-maint/python-click.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/python-click.git
 Section: python
-X-Python-Version: >= 2.7
-X-Python3-Version: >= 3.3
 Priority: optional
 Build-Depends: debhelper (>= 9),
                dh-python,
@@ -23,7 +21,7 @@ Standards-Version: 3.9.6
 Package: python-click
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}, python-colorama
-Description: Simple wrapper around optparse for powerful command line utilities
+Description: Simple wrapper around optparse for powerful command line utilities - Python 2.7
  Click is a Python package for creating beautiful command line interfaces
  in a composable way with as little code as necessary.  It's the "Command
  Line Interface Creation Kit".  It's highly configurable but comes with
@@ -38,7 +36,7 @@ Description: Simple wrapper around optparse for powerful command line utilities
 Package: python3-click
 Architecture: all
 Depends: ${misc:Depends}, ${python3:Depends}, python3-colorama
-Description: Simple wrapper around optparse for powerful command line utilities
+Description: Simple wrapper around optparse for powerful command line utilities - Python 3.x
  Click is a Python package for creating beautiful command line interfaces
  in a composable way with as little code as necessary.  It's the "Command
  Line Interface Creation Kit".  It's highly configurable but comes with
