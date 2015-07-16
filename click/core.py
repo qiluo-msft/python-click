@@ -2,12 +2,13 @@ import os
 import sys
 import codecs
 from contextlib import contextmanager
-from itertools import chain, repeat
+from itertools import repeat
 from functools import update_wrapper
 
 from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo
-from .exceptions import ClickException, UsageError, BadParameter, Abort
+from .exceptions import ClickException, UsageError, BadParameter, Abort, \
+     MissingParameter
 from .termui import prompt, confirm
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
@@ -107,11 +108,15 @@ class Context(object):
        Added the `allow_extra_args` and `allow_interspersed_args`
        parameters.
 
+    .. versionadded:: 4.0
+       Added the `color`, `ignore_unknown_options`, and
+       `max_content_width` parameters.
+
     :param command: the command class for this context.
     :param parent: the parent context.
-    :param info_name: the info name for this invokation.  Generally this
+    :param info_name: the info name for this invocation.  Generally this
                       is the most descriptive name for the script or
-                      command.  For the toplevel script is is usually
+                      command.  For the toplevel script it is usually
                       the name of the script, for commands below it it's
                       the name of the script.
     :param obj: an arbitrary object of user data.
@@ -126,6 +131,14 @@ class Context(object):
                            inherit from parent context.  If no context
                            defines the terminal width then auto
                            detection will be applied.
+    :param max_content_width: the maximum width for content rendered by
+                              Click (this currently only affects help
+                              pages).  This defaults to 80 characters if
+                              not overridden.  In other words: even if the
+                              terminal is larger than that, Click will not
+                              format things wider than 80 characters by
+                              default.  In addition to that, formatters might
+                              add some safety mapping on the right.
     :param resilient_parsing: if this flag is enabled then Click will
                               parse without any interactivity or callback
                               invocation.  This is useful for implementing
@@ -137,6 +150,9 @@ class Context(object):
     :param allow_interspersed_args: if this is set to `False` then options
                                     and arguments cannot be mixed.  The
                                     default is to inherit from the command.
+    :param ignore_unknown_options: instructs click to ignore options it does
+                                   not know and keeps them for later
+                                   processing.
     :param help_option_names: optionally a list of strings that define how
                               the default help parameter is named.  The
                               default is ``['--help']``.
@@ -144,13 +160,20 @@ class Context(object):
                                  normalize tokens (options, choices,
                                  etc.).  This for instance can be used to
                                  implement case insensitive behavior.
+    :param color: controls if the terminal supports ANSI colors or not.  The
+                  default is autodetection.  This is only needed if ANSI
+                  codes are used in texts that Click prints which is by
+                  default not the case.  This for instance would affect
+                  help output.
     """
 
     def __init__(self, command, parent=None, info_name=None, obj=None,
                  auto_envvar_prefix=None, default_map=None,
-                 terminal_width=None, resilient_parsing=False,
-                 allow_extra_args=None, allow_interspersed_args=None,
-                 help_option_names=None, token_normalize_func=None):
+                 terminal_width=None, max_content_width=None,
+                 resilient_parsing=False, allow_extra_args=None,
+                 allow_interspersed_args=None,
+                 ignore_unknown_options=None, help_option_names=None,
+                 token_normalize_func=None, color=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -190,6 +213,12 @@ class Context(object):
         #: The width of the terminal (None is autodetection).
         self.terminal_width = terminal_width
 
+        if max_content_width is None and parent is not None:
+            max_content_width = parent.max_content_width
+        #: The maximum width of formatted content (None implies a sensible
+        #: default which is 80 for most things).
+        self.max_content_width = max_content_width
+
         if allow_extra_args is None:
             allow_extra_args = command.allow_extra_args
         #: Indicates if the context allows extra args or if it should
@@ -205,6 +234,18 @@ class Context(object):
         #:
         #: .. versionadded:: 3.0
         self.allow_interspersed_args = allow_interspersed_args
+
+        if ignore_unknown_options is None:
+            ignore_unknown_options = command.ignore_unknown_options
+        #: Instructs click to ignore options that a command does not
+        #: understand and will store it on the context for later
+        #: processing.  This is primarily useful for situations where you
+        #: want to call into external programs.  Generally this pattern is
+        #: strongly discouraged because it's not possibly to losslessly
+        #: forward all arguments.
+        #:
+        #: .. versionadded:: 4.0
+        self.ignore_unknown_options = ignore_unknown_options
 
         if help_option_names is None:
             if parent is not None:
@@ -239,6 +280,12 @@ class Context(object):
             self.auto_envvar_prefix = auto_envvar_prefix.upper()
         self.auto_envvar_prefix = auto_envvar_prefix
 
+        if color is None and parent is not None:
+            color = parent.color
+
+        #: Controls if styling output is wanted or not.
+        self.color = color
+
         self._close_callbacks = []
         self._depth = 0
 
@@ -272,7 +319,8 @@ class Context(object):
 
     def make_formatter(self):
         """Creates the formatter for the help and usage output."""
-        return HelpFormatter(width=self.terminal_width)
+        return HelpFormatter(width=self.terminal_width,
+                             max_width=self.max_content_width)
 
     def call_on_close(self, f):
         """This decorator remembers a function as callback that should be
@@ -466,8 +514,12 @@ class BaseCommand(object):
     :param context_settings: an optional dictionary with defaults that are
                              passed to the context object.
     """
+    #: the default for the :attr:`Context.allow_extra_args` flag.
     allow_extra_args = False
+    #: the default for the :attr:`Context.allow_interspersed_args` flag.
     allow_interspersed_args = True
+    #: the default for the :attr:`Context.ignore_unknown_options` flag.
+    ignore_unknown_options = False
 
     def __init__(self, name, context_settings=None):
         #: the name the command thinks it has.  Upon registering a command
@@ -475,6 +527,8 @@ class BaseCommand(object):
         #: with this information.  You should instead use the
         #: :class:`Context`\'s :attr:`~Context.info_name` attribute.
         self.name = name
+        if context_settings is None:
+            context_settings = {}
         #: an optional dictionary with defaults passed to the context.
         self.context_settings = context_settings
 
@@ -499,7 +553,7 @@ class BaseCommand(object):
         :param extra: extra keyword arguments forwarded to the context
                       constructor.
         """
-        for key, value in iteritems(self.context_settings or {}):
+        for key, value in iteritems(self.context_settings):
             if key not in extra:
                 extra[key] = value
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
@@ -689,12 +743,12 @@ class Command(BaseCommand):
     def get_help_option(self, ctx):
         """Returns the help option object."""
         help_options = self.get_help_option_names(ctx)
-        if not help_options:
+        if not help_options or not self.add_help_option:
             return
 
         def show_help(ctx, param, value):
             if value and not ctx.resilient_parsing:
-                echo(ctx.get_help())
+                echo(ctx.get_help(), color=ctx.color)
                 ctx.exit()
         return Option(help_options, is_flag=True,
                       is_eager=True, expose_value=False,
@@ -705,6 +759,7 @@ class Command(BaseCommand):
         """Creates the underlying option parser for this command."""
         parser = OptionParser(ctx)
         parser.allow_interspersed_args = ctx.allow_interspersed_args
+        parser.ignore_unknown_options = ctx.ignore_unknown_options
         for param in self.get_params(ctx):
             param.add_to_parser(parser, ctx)
         return parser
@@ -785,7 +840,7 @@ class Command(BaseCommand):
 class MultiCommand(Command):
     """A multi command is the basic implementation of a command that
     dispatches to subcommands.  The most common version is the
-    :class:`Command`.
+    :class:`Group`.
 
     :param invoke_without_command: this controls how the multi command itself
                                    is invoked.  By default it's only invoked
@@ -893,7 +948,7 @@ class MultiCommand(Command):
 
     def parse_args(self, ctx, args):
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
-            echo(ctx.get_help())
+            echo(ctx.get_help(), color=ctx.color)
             ctx.exit()
         return Command.parse_args(self, ctx, args)
 
@@ -1111,7 +1166,9 @@ class Parameter(object):
                      value)`` and needs to return the value.  Before Click
                      2.0, the signature was ``(ctx, value)``.
     :param nargs: the number of arguments to match.  If not ``1`` the return
-                  value is a tuple instead of single value.
+                  value is a tuple instead of single value.  The default for
+                  nargs is ``1`` (except if the type is a tuple, then it's
+                  the arity of the tuple).
     :param metavar: how the value is represented in the help page.
     :param expose_value: if this is `True` then the value is passed onwards
                          to the command callback and stored on the context,
@@ -1125,11 +1182,21 @@ class Parameter(object):
     param_type_name = 'parameter'
 
     def __init__(self, param_decls=None, type=None, required=False,
-                 default=None, callback=None, nargs=1, metavar=None,
+                 default=None, callback=None, nargs=None, metavar=None,
                  expose_value=True, is_eager=False, envvar=None):
         self.name, self.opts, self.secondary_opts = \
             self._parse_decls(param_decls or (), expose_value)
+
         self.type = convert_type(type, default)
+
+        # Default nargs to what the type tells us if we have that
+        # information available.
+        if nargs is None:
+            if self.type.is_composite:
+                nargs = self.type.arity
+            else:
+                nargs = 1
+
         self.required = required
         self.callback = callback
         self.nargs = nargs
@@ -1139,6 +1206,13 @@ class Parameter(object):
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
+
+    @property
+    def human_readable_name(self):
+        """Returns the human readable name of this parameter.  This is the
+        same as the name for options, but the metavar for arguments.
+        """
+        return self.name
 
     def make_metavar(self):
         if self.metavar is not None:
@@ -1172,8 +1246,19 @@ class Parameter(object):
 
     def type_cast_value(self, ctx, value):
         """Given a value this runs it properly through the type system.
-        This automatically handles things like `nargs` and `multiple`.
+        This automatically handles things like `nargs` and `multiple` as
+        well as composite types.
         """
+        if self.type.is_composite:
+            if self.nargs <= 1:
+                raise TypeError('Attempted to invoke composite type '
+                                'but nargs has been set to %s.  This is '
+                                'not supported; nargs needs to be set to '
+                                'a fixed value > 1.' % self.nargs)
+            if self.multiple:
+                return tuple(self.type(x or (), self, ctx) for x in value or ())
+            return self.type(value or (), self, ctx)
+
         def _convert(value, level):
             if level == 0:
                 return self.type(value, self, ctx)
@@ -1205,20 +1290,9 @@ class Parameter(object):
             value = self.get_default(ctx)
 
         if self.required and self.value_is_missing(value):
-            ctx.fail(self.get_missing_message(ctx))
+            raise MissingParameter(ctx=ctx, param=self)
 
         return value
-
-    def get_missing_message(self, ctx):
-        rv = 'Missing %s %s.' % (
-            self.param_type_name,
-            ' / '.join('"%s"' % x for x in chain(
-                self.opts, self.secondary_opts)),
-        )
-        extra = self.type.get_missing_message(self)
-        if extra:
-            rv += '  ' + extra
-        return rv
 
     def resolve_envvar_value(self, ctx):
         if self.envvar is None:
@@ -1351,6 +1425,8 @@ class Option(Parameter):
 
         # Sanity check for stuff we don't support
         if __debug__:
+            if self.nargs < 0:
+                raise TypeError('Options cannot have nargs < 0')
             if self.prompt and self.is_flag and not self.is_bool_flag:
                 raise TypeError('Cannot prompt for flags that are not bools.')
             if not self.is_bool_flag and self.secondary_opts:
@@ -1455,7 +1531,10 @@ class Option(Parameter):
         help = self.help or ''
         extra = []
         if self.default is not None and self.show_default:
-            extra.append('default: %s' % self.default)
+            extra.append('default: %s' % (
+                         ', '.join('%s' % d for d in self.default)
+                         if isinstance(self.default, (list, tuple))
+                         else self.default, ))
         if self.required:
             extra.append('required')
         if extra:
@@ -1537,6 +1616,12 @@ class Argument(Parameter):
             else:
                 required = attrs.get('nargs', 1) > 0
         Parameter.__init__(self, param_decls, required=required, **attrs)
+
+    @property
+    def human_readable_name(self):
+        if self.metavar is not None:
+            return self.metavar
+        return self.name.upper()
 
     def make_metavar(self):
         if self.metavar is not None:

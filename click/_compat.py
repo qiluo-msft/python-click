@@ -14,6 +14,10 @@ DEFAULT_COLUMNS = 80
 _ansi_re = re.compile('\033\[((?:\d|;)*)([a-zA-Z])')
 
 
+def get_filesystem_encoding():
+    return sys.getfilesystemencoding() or sys.getdefaultencoding()
+
+
 def _make_text_stream(stream, encoding, errors):
     if encoding is None:
         encoding = get_best_encoding(stream)
@@ -189,7 +193,7 @@ if PY2:
 
     def filename_to_ui(value):
         if isinstance(value, bytes):
-            value = value.decode(sys.getfilesystemencoding(), 'replace')
+            value = value.decode(get_filesystem_encoding(), 'replace')
         return value
 else:
     import io
@@ -255,7 +259,11 @@ else:
 
     def _stream_is_misconfigured(stream):
         """A stream is misconfigured if its encoding is ASCII."""
-        return is_ascii_encoding(getattr(stream, 'encoding', None))
+        # If the stream does not have an encoding set, we assume it's set
+        # to ASCII.  This appears to happen in certain unittest
+        # environments.  It's not quite clear what the correct behavior is
+        # but this at least will force Click to recover somehow.
+        return is_ascii_encoding(getattr(stream, 'encoding', None) or 'ascii')
 
     def _is_compatible_text_stream(stream, encoding, errors):
         stream_encoding = getattr(stream, 'encoding', None)
@@ -360,7 +368,7 @@ else:
 
     def filename_to_ui(value):
         if isinstance(value, bytes):
-            value = value.decode(sys.getfilesystemencoding(), 'replace')
+            value = value.decode(get_filesystem_encoding(), 'replace')
         else:
             value = value.encode('utf-8', 'surrogateescape') \
                 .decode('utf-8', 'replace')
@@ -456,6 +464,18 @@ colorama = None
 get_winterm_size = None
 
 
+def strip_ansi(value):
+    return _ansi_re.sub('', value)
+
+
+def should_strip_ansi(stream=None, color=None):
+    if color is None:
+        if stream is None:
+            stream = sys.stdin
+        return not isatty(stream)
+    return not color
+
+
 # If we're on Windows, we provide transparent integration through
 # colorama.  This will make ANSI colors through the echo function
 # work automatically.
@@ -470,7 +490,7 @@ if WIN:
     else:
         _ansi_stream_wrappers = WeakKeyDictionary()
 
-        def auto_wrap_for_ansi(stream):
+        def auto_wrap_for_ansi(stream, color=None):
             """This function wraps a stream so that calls through colorama
             are issued to the win32 console API to recolor on demand.  It
             also ensures to reset the colors if a write call is interrupted
@@ -482,7 +502,7 @@ if WIN:
                 cached = None
             if cached is not None:
                 return cached
-            strip = not isatty(stream)
+            strip = should_strip_ansi(stream, color)
             ansi_wrapper = colorama.AnsiToWin32(stream, strip=strip)
             rv = ansi_wrapper.stream
             _write = rv.write
@@ -505,10 +525,6 @@ if WIN:
             win = colorama.win32.GetConsoleScreenBufferInfo(
                 colorama.win32.STDOUT).srWindow
             return win.Right - win.Left, win.Bottom - win.Top
-
-
-def strip_ansi(value):
-    return _ansi_re.sub('', value)
 
 
 def term_len(x):

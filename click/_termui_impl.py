@@ -52,7 +52,7 @@ class ProgressBar(object):
     def __init__(self, iterable, length=None, fill_char='#', empty_char=' ',
                  bar_template='%(bar)s', info_sep='  ', show_eta=True,
                  show_percent=None, show_pos=False, item_show_func=None,
-                 label=None, file=None, width=30):
+                 label=None, file=None, color=None, width=30):
         self.fill_char = fill_char
         self.empty_char = empty_char
         self.bar_template = bar_template
@@ -65,6 +65,7 @@ class ProgressBar(object):
         if file is None:
             file = _default_text_stdout()
         self.file = file
+        self.color = color
         self.width = width
         self.autowidth = width == 0
 
@@ -180,7 +181,7 @@ class ProgressBar(object):
         from .termui import get_terminal_size
 
         if self.is_hidden:
-            echo(self.label, file=self.file)
+            echo(self.label, file=self.file, color=self.color)
             self.file.flush()
             return
 
@@ -206,12 +207,12 @@ class ProgressBar(object):
         if self.max_width is None or self.max_width < line_len:
             self.max_width = line_len
         # Use echo here so that we get colorama support.
-        echo(line, file=self.file, nl=False)
+        echo(line, file=self.file, nl=False, color=self.color)
         self.file.write(' ' * (clear_width - line_len))
         self.file.flush()
 
-    def make_step(self):
-        self.pos += 1
+    def make_step(self, n_steps):
+        self.pos += n_steps
         if self.length_known and self.pos >= self.length:
             self.finished = True
 
@@ -222,6 +223,10 @@ class ProgressBar(object):
         self.avg = self.avg[-6:] + [-(self.start - time.time()) / (self.pos)]
 
         self.eta_known = self.length_known
+
+    def update(self, n_steps):
+        self.make_step(n_steps)
+        self.render_progress()
 
     def finish(self):
         self.eta_known = 0
@@ -239,8 +244,7 @@ class ProgressBar(object):
             self.render_progress()
             raise StopIteration()
         else:
-            self.make_step()
-            self.render_progress()
+            self.update(1)
             return rv
 
     if not PY2:
@@ -302,9 +306,24 @@ def _pipepager(text, cmd, color):
     try:
         c.stdin.write(text.encode(encoding, 'replace'))
         c.stdin.close()
-    except IOError:
+    except (IOError, KeyboardInterrupt):
         pass
-    c.wait()
+
+    # Less doesn't respect ^C, but catches it for its own UI purposes (aborting
+    # search or other commands inside less).
+    #
+    # That means when the user hits ^C, the parent process (click) terminates,
+    # but less is still alive, paging the output and messing up the terminal.
+    #
+    # If the user wants to make the pager exit on ^C, they should set
+    # `LESS='-K'`. It's not our decision to make.
+    while True:
+        try:
+            c.wait()
+        except KeyboardInterrupt:
+            pass
+        else:
+            break
 
 
 def _tempfilepager(text, cmd, color):
@@ -348,7 +367,7 @@ class Editor(object):
         if WIN:
             return 'notepad'
         for editor in 'vim', 'nano':
-            if os.system('which %s &> /dev/null' % editor) == 0:
+            if os.system('which %s >/dev/null 2>&1' % editor) == 0:
                 return editor
         return 'vi'
 
