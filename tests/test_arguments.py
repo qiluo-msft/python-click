@@ -34,6 +34,27 @@ def test_nargs_tup(runner):
     ]
 
 
+def test_nargs_tup_composite(runner):
+    variations = [
+        dict(type=(str, int)),
+        dict(type=click.Tuple([str, int])),
+        dict(nargs=2, type=click.Tuple([str, int])),
+        dict(nargs=2, type=(str, int)),
+    ]
+
+    for opts in variations:
+        @click.command()
+        @click.argument('item', **opts)
+        def copy(item):
+            click.echo('name=%s id=%d' % item)
+
+        result = runner.invoke(copy, ['peter', '1'])
+        assert not result.exception
+        assert result.output.splitlines() == [
+            'name=peter id=1',
+        ]
+
+
 def test_nargs_err(runner):
     @click.command()
     @click.argument('x')
@@ -106,7 +127,7 @@ def test_stdout_default(runner):
 
 def test_nargs_envvar(runner):
     @click.command()
-    @click.option('--arg', nargs=-1)
+    @click.option('--arg', nargs=2)
     def cmd(arg):
         click.echo('|'.join(arg))
 
@@ -116,7 +137,7 @@ def test_nargs_envvar(runner):
     assert result.output == 'foo|bar\n'
 
     @click.command()
-    @click.option('--arg', envvar='X', nargs=-1)
+    @click.option('--arg', envvar='X', nargs=2)
     def cmd(arg):
         click.echo('|'.join(arg))
 
@@ -188,4 +209,38 @@ def test_eat_options(runner):
         '-foo',
         'bar',
         '-x',
+    ]
+
+
+def test_nargs_star_ordering(runner):
+    @click.command()
+    @click.argument('a', nargs=-1)
+    @click.argument('b')
+    @click.argument('c')
+    def cmd(a, b, c):
+        for arg in (a, b, c):
+            click.echo(arg)
+
+    result = runner.invoke(cmd, ['a', 'b', 'c'])
+    assert result.output.splitlines() == [
+        "('a',)",
+        'b',
+        'c',
+    ]
+
+
+def test_nargs_specified_plus_star_ordering(runner):
+    @click.command()
+    @click.argument('a', nargs=-1)
+    @click.argument('b')
+    @click.argument('c', nargs=2)
+    def cmd(a, b, c):
+        for arg in (a, b, c):
+            click.echo(arg)
+
+    result = runner.invoke(cmd, ['a', 'b', 'c', 'd', 'e', 'f'])
+    assert result.output.splitlines() == [
+        "('a', 'b', 'c')",
+        'd',
+        "('e', 'f')",
     ]

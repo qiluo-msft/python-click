@@ -55,6 +55,42 @@ And on the command line:
 
     invoke(findme, args=['--pos', '2.0', '3.0'])
 
+.. _tuple-type:
+
+Tuples as Multi Value Options
+-----------------------------
+
+.. versionadded:: 4.0
+
+As you can see that by using `nargs` set to a specific number each item in
+the resulting tuple is of the same type.  This might not be what you want.
+Commonly you might want to use different types for different indexes in
+the tuple.  For this you can directly specify a tuple as type:
+
+.. click:example::
+
+    @click.command()
+    @click.option('--item', type=(unicode, int))
+    def putitem(item):
+        click.echo('name=%s id=%d' % item)
+
+And on the command line:
+
+.. click:run::
+
+    invoke(putitem, args=['--item', 'peter', '1338'])
+
+By using a tuple literal as type, `nargs` gets automatically set to the
+length of the tuple and the :class:`click.Tuple` type is automatically
+used.  The above example is thus equivalent to this:
+
+.. click:example::
+
+    @click.command()
+    @click.option('--item', nargs=2, type=click.Tuple([unicode, int]))
+    def putitem(item):
+        click.echo('name=%s id=%d' % item)
+
 Multiple Options
 ----------------
 
@@ -113,12 +149,12 @@ Example:
 
 .. click:example::
 
-    import os
+    import sys
 
     @click.command()
     @click.option('--shout/--no-shout', default=False)
     def info(shout):
-        rv = os.uname()[0]
+        rv = sys.platform
         if shout:
             rv = rv.upper() + '!!!!111'
         click.echo(rv)
@@ -135,12 +171,12 @@ manually inform Click that something is a flag:
 
 .. click:example::
 
-    import os
+    import sys
 
     @click.command()
     @click.option('--shout', is_flag=True)
     def info(shout):
-        rv = os.uname()[0]
+        rv = sys.platform
         if shout:
             rv = rv.upper() + '!!!!111'
         click.echo(rv)
@@ -178,14 +214,14 @@ the default.
 
 .. click:example::
 
-    import os
+    import sys
 
     @click.command()
     @click.option('--upper', 'transformation', flag_value='upper',
                   default=True)
     @click.option('--lower', 'transformation', flag_value='lower')
     def info(transformation):
-        click.echo(getattr(os.uname()[0], transformation)())
+        click.echo(getattr(sys.platform, transformation)())
 
 And on the command line:
 
@@ -300,6 +336,10 @@ Callbacks and Eager Options
 Sometimes, you want a parameter to completely change the execution flow.
 For instance, this is the case when you want to have a ``--version``
 parameter that prints out the version and then exits the application.
+
+Note: an actual implementation of a ``--version`` parameter that is
+reusable is available in Click as :func:`click.version_option`.  The code
+here is merely an example of how to implement such a flag.
 
 In such cases, you need two concepts: eager parameters and a callback.  An
 eager parameter is a parameter that is handled before others, and a

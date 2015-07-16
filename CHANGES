@@ -3,6 +3,51 @@ Click Changelog
 
 This contains all major version changes between Click releases.
 
+Version 4.1
+-----------
+
+(bugfix release, released on July 14th 2015)
+
+- Fix a bug where error messages would include a trailing `None` string.
+- Fix a bug where Click would crash on docstrings with trailing newlines.
+- Support streams with encoding set to `None` on Python 3 by barfing with
+  a better error.
+- Handle ^C in less-pager properly.
+- Handle return value of `None` from `sys.getfilesystemencoding`
+- Fix crash when writing to unicode files with `click.echo`.
+- Fix type inference with multiple options.
+
+Version 4.0
+-----------
+
+(codename "zoom zoom", released on March 31st 2015)
+
+- Added `color` parameters to lots of interfaces that directly or indirectly
+  call into echoing.  This previously was always autodetection (with the
+  exception of the `echo_via_pager` function).  Now you can forcefully
+  enable or disable it, overriding the auto detection of Click.
+- Added an `UNPROCESSED` type which does not perform any type changes which
+  simplifies text handling on 2.x / 3.x in some special advanced usecases.
+- Added `NoSuchOption` and `BadOptionUsage` exceptions for more generic
+  handling of errors.
+- Added support for handling of unprocessed options which can be useful in
+  situations where arguments are forwarded to underlying tools.
+- Added `max_content_width` parameter to the context which can be used to
+  change the maximum width of help output.  By default Click will not format
+  content for more than 80 characters width.
+- Added support for writing prompts to stderr.
+- Fix a bug when showing the default for multiple arguments.
+- Added support for custom subclasses to `option` and `argument`.
+- Fix bug in ``clear()`` on Windows when colorama is installed.
+- Reject ``nargs=-1`` for options properly.  Options cannot be variadic.
+- Fixed an issue with bash completion not working properly for commands with
+  non ASCII characters or dashes.
+- Added a way to manually update the progressbar.
+- Changed the formatting of missing arguments.  Previously the internal
+  argument name was shown in error messages, now the metavar is shown if
+  passed.  In case an automated metavar is selected, it's stripped of
+  extra formatting first.
+
 Version 3.3
 -----------
 

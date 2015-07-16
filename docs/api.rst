@@ -119,6 +119,8 @@ Types
 
 .. autodata:: UUID
 
+.. autodata:: UNPROCESSED
+
 .. autoclass:: File
 
 .. autoclass:: Path
@@ -126,6 +128,8 @@ Types
 .. autoclass:: Choice
 
 .. autoclass:: IntRange
+
+.. autoclass:: Tuple
 
 .. autoclass:: ParamType
    :members:
@@ -142,6 +146,10 @@ Exceptions
 .. autoexception:: BadParameter
 
 .. autoexception:: FileError
+
+.. autoexception:: NoSuchOption
+
+.. autoexception:: BadOptionUsage
 
 Formatting
 ----------
