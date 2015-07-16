@@ -1,3 +1,9 @@
+python-click (4.1-1) unstable; urgency=medium
+
+  * Upstream 4.1 release
+
+ -- Alexandre Viau <alexandre@alexandreviau.net>  Thu, 16 Jul 2015 08:28:32 -0400
+
 python-click (3.3-2) unstable; urgency=low
 
   * Set UTF-8 before building (Closes: #772605)
