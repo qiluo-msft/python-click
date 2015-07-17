@@ -2,9 +2,9 @@ Source: python-click
 Section: python
 Priority: optional
 Maintainer: Alexandre Viau <alexandre@alexandreviau.net>
-Build-Depends-Indep: debhelper (>= 9),
-                     dh-python,
-                     python-all,
+Build-Depends: debhelper (>= 9),
+               dh-python
+Build-Depends-Indep: python-all,
                      python-setuptools,
                      python-pytest,
                      python-colorama,
