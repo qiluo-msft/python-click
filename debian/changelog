@@ -1,3 +1,9 @@
+python-click (5.1-2) unstable; urgency=low
+
+  *  New upstream release
+
+ -- Alexandre Viau <alexandre@alexandreviau.net>  Sat, 22 Aug 2015 21:10:55 -0400
+
 python-click (4.1-1) unstable; urgency=medium
 
   * Upstream 4.1 release
