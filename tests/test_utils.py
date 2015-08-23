@@ -1,7 +1,10 @@
 import os
 import sys
-import click
 
+import pytest
+
+import click
+import click.utils
 import click._termui_impl
 
 
@@ -123,8 +126,24 @@ def test_prompts(runner):
     assert result.output == 'Foo [Y/n]: n\nno :(\n'
 
 
-def test_echo_via_pager(monkeypatch, capfd):
-    monkeypatch.setitem(os.environ, 'PAGER', 'cat')
+def test_prompts_abort(monkeypatch, capsys):
+    def f(_):
+        raise KeyboardInterrupt()
+
+    monkeypatch.setattr('click.termui.hidden_prompt_func', f)
+
+    try:
+        click.prompt('Password', hide_input=True)
+    except click.Abort:
+        click.echo('Screw you.')
+
+    out, err = capsys.readouterr()
+    assert out == 'Password: \nScrew you.\n'
+
+
+@pytest.mark.parametrize('cat', ['cat', 'cat ', 'cat '])
+def test_echo_via_pager(monkeypatch, capfd, cat):
+    monkeypatch.setitem(os.environ, 'PAGER', cat)
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda x: True)
     click.echo_via_pager('haha')
     out, err = capfd.readouterr()
@@ -234,3 +253,23 @@ def test_open_file(runner):
         result = runner.invoke(cli, ['-'], input='foobar')
         assert result.exception is None
         assert result.output == 'foobar\nmeep\n'
+
+
+def test_iter_keepopenfile(tmpdir):
+
+    expected = list(map(str, range(10)))
+    p = tmpdir.mkdir('testdir').join('testfile')
+    p.write(os.linesep.join(expected))
+    f = p.open()
+    for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f)):
+        assert e_line == a_line.strip()
+
+
+def test_iter_lazyfile(tmpdir):
+
+    expected = list(map(str, range(10)))
+    p = tmpdir.mkdir('testdir').join('testfile')
+    p.write(os.linesep.join(expected))
+    f = p.open()
+    for e_line, a_line in zip(expected, click.utils.LazyFile(f.name)):
+        assert e_line == a_line.strip()
