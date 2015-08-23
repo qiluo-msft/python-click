@@ -277,8 +277,14 @@ class CliRunner(object):
             except SystemExit as e:
                 if e.code != 0:
                     exception = e
-                exit_code = e.code
+
                 exc_info = sys.exc_info()
+
+                exit_code = e.code
+                if not isinstance(exit_code, int):
+                    sys.stdout.write(str(exit_code))
+                    sys.stdout.write('\n')
+                    exit_code = 1
             except Exception as e:
                 if not catch_exceptions:
                     raise

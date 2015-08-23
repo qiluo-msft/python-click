@@ -12,8 +12,10 @@ from .exceptions import ClickException, UsageError, BadParameter, Abort, \
 from .termui import prompt, confirm
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
+from .globals import push_context, pop_context
 
-from ._compat import PY2, isidentifier, iteritems
+from ._compat import PY2, isidentifier, iteritems, _check_for_unicode_literals
+
 
 _missing = object()
 
@@ -189,6 +191,8 @@ class Context(object):
             obj = parent.obj
         #: the user object stored.
         self.obj = obj
+        self._meta = getattr(parent, 'meta', {})
+
         #: A dictionary (-like object) with defaults for parameters.
         if default_map is None \
            and parent is not None \
@@ -291,31 +295,80 @@ class Context(object):
 
     def __enter__(self):
         self._depth += 1
+        push_context(self)
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
+        pop_context()
         self._depth -= 1
         if self._depth == 0:
             self.close()
 
-    def _get_invoked_subcommands(self):
-        from warnings import warn
-        warn(Warning('This API does not work properly and has been largely '
-                     'removed in Click 3.2 to fix a regression the '
-                     'introduction of this API caused.  Consult the '
-                     'upgrade documentation for more information.  For '
-                     'more information about this see '
-                     'http://click.pocoo.org/upgrading/#upgrading-to-3.2'),
-             stacklevel=2)
-        if self.invoked_subcommand is None:
-            return []
-        return [self.invoked_subcommand]
-    def _set_invoked_subcommands(self, value):
-        self.invoked_subcommand = \
-            len(value) > 1 and '*' or value and value[0] or None
-    invoked_subcommands = property(_get_invoked_subcommands,
-                                   _set_invoked_subcommands)
-    del _get_invoked_subcommands, _set_invoked_subcommands
+    @contextmanager
+    def scope(self, cleanup=True):
+        """This helper method can be used with the context object to promote
+        it to the current thread local (see :func:`get_current_context`).
+        The default behavior of this is to invoke the cleanup functions which
+        can be disabled by setting `cleanup` to `False`.  The cleanup
+        functions are typically used for things such as closing file handles.
+
+        If the cleanup is intended the context object can also be directly
+        used as a context manager.
+
+        Example usage::
+
+            with ctx.scope():
+                assert get_current_context() is ctx
+
+        This is equivalent::
+
+            with ctx:
+                assert get_current_context() is ctx
+
+        .. versionadded:: 5.0
+
+        :param cleanup: controls if the cleanup functions should be run or
+                        not.  The default is to run these functions.  In
+                        some situations the context only wants to be
+                        temporarily pushed in which case this can be disabled.
+                        Nested pushes automatically defer the cleanup.
+        """
+        if not cleanup:
+            self._depth += 1
+        try:
+            with self as rv:
+                yield rv
+        finally:
+            if not cleanup:
+                self._depth -= 1
+
+    @property
+    def meta(self):
+        """This is a dictionary which is shared with all the contexts
+        that are nested.  It exists so that click utiltiies can store some
+        state here if they need to.  It is however the responsibility of
+        that code to manage this dictionary well.
+
+        The keys are supposed to be unique dotted strings.  For instance
+        module paths are a good choice for it.  What is stored in there is
+        irrelevant for the operation of click.  However what is important is
+        that code that places data here adheres to the general semantics of
+        the system.
+
+        Example usage::
+
+            LANG_KEY = __name__ + '.lang'
+
+            def set_language(value):
+                ctx = get_current_context()
+                ctx.meta[LANG_KEY] = value
+
+            def get_language():
+                return get_current_context().meta.get(LANG_KEY, 'en_US')
+
+        .. versionadded:: 5.0
+        """
+        return self._meta
 
     def make_formatter(self):
         """Creates the formatter for the help and usage output."""
@@ -434,11 +487,6 @@ class Context(object):
         self, callback = args[:2]
         ctx = self
 
-        # This is just to improve the error message in cases where old
-        # code incorrectly invoked this method.  This will eventually be
-        # removed.
-        injected_arguments = False
-
         # It's also possible to invoke another command which might or
         # might not have a callback.  In that case we also fill
         # in defaults and make a new context for this command.
@@ -453,26 +501,11 @@ class Context(object):
             for param in other_cmd.params:
                 if param.name not in kwargs and param.expose_value:
                     kwargs[param.name] = param.get_default(ctx)
-                    injected_arguments = True
 
         args = args[2:]
-        if getattr(callback, '__click_pass_context__', False):
-            args = (ctx,) + args
         with augment_usage_errors(self):
-            try:
-                with ctx:
-                    return callback(*args, **kwargs)
-            except TypeError as e:
-                if not injected_arguments:
-                    raise
-                if 'got multiple values for' in str(e):
-                    raise RuntimeError(
-                        'You called .invoke() on the context with a command '
-                        'but provided parameters as positional arguments.  '
-                        'This is not supported but sometimes worked by chance '
-                        'in older versions of Click.  To fix this see '
-                        'http://click.pocoo.org/upgrading/#upgrading-to-3.2')
-                raise
+            with ctx:
+                return callback(*args, **kwargs)
 
     def forward(*args, **kwargs):
         """Similar to :meth:`invoke` but fills in default keyword
@@ -557,7 +590,8 @@ class BaseCommand(object):
             if key not in extra:
                 extra[key] = value
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
-        self.parse_args(ctx, args)
+        with ctx.scope(cleanup=False):
+            self.parse_args(ctx, args)
         return ctx
 
     def parse_args(self, ctx, args):
@@ -624,6 +658,8 @@ class BaseCommand(object):
                                    'Either switch to Python 2 or consult '
                                    'http://click.pocoo.org/python3/ '
                                    'for mitigation steps.')
+        else:
+            _check_for_unicode_literals()
 
         if args is None:
             args = sys.argv[1:]

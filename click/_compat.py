@@ -5,6 +5,8 @@ import sys
 import codecs
 from weakref import WeakKeyDictionary
 
+import click
+
 
 PY2 = sys.version_info[0] == 2
 WIN = sys.platform.startswith('win')
@@ -12,6 +14,39 @@ DEFAULT_COLUMNS = 80
 
 
 _ansi_re = re.compile('\033\[((?:\d|;)*)([a-zA-Z])')
+
+
+def _find_unicode_literals_frame():
+    import __future__
+    frm = sys._getframe(1)
+    idx = 1
+    while frm is not None:
+        if frm.f_globals.get('__name__', '').startswith('click.'):
+            frm = frm.f_back
+            idx += 1
+        elif frm.f_code.co_flags & __future__.unicode_literals.compiler_flag:
+            return idx
+        else:
+            break
+    return 0
+
+
+def _check_for_unicode_literals():
+    if not __debug__:
+        return
+    if not PY2 or click.disable_unicode_literals_warning:
+        return
+    bad_frame = _find_unicode_literals_frame()
+    if bad_frame <= 0:
+        return
+    from warnings import warn
+    warn(Warning('Click detected the use of the unicode_literals '
+                 '__future__ import.  This is heavily discouraged '
+                 'because it can introduce subtle bugs in your '
+                 'code.  You should instead use explicit u"" literals '
+                 'for your unicode strings.  For more information see '
+                 'http://click.pocoo.org/python3/'),
+         stacklevel=bad_frame)
 
 
 def get_filesystem_encoding():
@@ -406,6 +441,19 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
         if encoding is None:
             return open(filename, mode), True
         return io.open(filename, mode, encoding=encoding, errors=errors), True
+
+    # Some usability stuff for atomic writes
+    if 'a' in mode:
+        raise ValueError(
+            'Appending to an existing file is not supported, because that '
+            'would involve an expensive `copy`-operation to a temporary '
+            'file. Open the file in normal `w`-mode and copy explicitly '
+            'if that\'s what you\'re after.'
+        )
+    if 'x' in mode:
+        raise ValueError('Use the `overwrite`-parameter instead.')
+    if 'w' not in mode:
+        raise ValueError('Atomic writes only make sense with `w`-mode.')
 
     # Atomic writes are more complicated.  They work by opening a file
     # as a proxy in the same folder and then using the fdopen

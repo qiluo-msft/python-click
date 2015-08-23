@@ -18,6 +18,9 @@
 from .core import Context, BaseCommand, Command, MultiCommand, Group, \
      CommandCollection, Parameter, Option, Argument
 
+# Globals
+from .globals import get_current_context
+
 # Decorators
 from .decorators import pass_context, pass_obj, make_pass_decorator, \
      command, group, argument, option, confirmation_option, \
@@ -52,6 +55,9 @@ __all__ = [
     'Context', 'BaseCommand', 'Command', 'MultiCommand', 'Group',
     'CommandCollection', 'Parameter', 'Option', 'Argument',
 
+    # Globals
+    'get_current_context',
+
     # Decorators
     'pass_context', 'pass_obj', 'make_pass_decorator', 'command', 'group',
     'argument', 'option', 'confirmation_option', 'password_option',
@@ -82,4 +88,9 @@ __all__ = [
 ]
 
 
-__version__ = '4.1'
+# Controls if click should emit the warning about the use of unicode
+# literals.
+disable_unicode_literals_warning = False
+
+
+__version__ = '5.1'
