@@ -1,6 +1,8 @@
 python-click (5.1-1) unstable; urgency=low
 
   *  New upstream release
+  *  Moved appropriate dependencies to Build-Depends-Indep
+  *  Re-licensed debian packaging to BSD
 
  -- Alexandre Viau <alexandre@alexandreviau.net>  Sat, 22 Aug 2015 21:10:55 -0400
 
