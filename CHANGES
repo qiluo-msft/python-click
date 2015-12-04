@@ -3,6 +3,62 @@ Click Changelog
 
 This contains all major version changes between Click releases.
 
+Version 6.2
+-----------
+
+(bugfix release, released on November 27th 2015)
+
+- Correct fix for hidden progress bars.
+
+Version 6.1
+-----------
+
+(bugfix release, released on November 27th 2015)
+
+- Resolved an issue with invisible progress bars no longer rendering.
+- Disable chain commands with subcommands as they were inherently broken.
+- Fix `MissingParameter` not working without parameters passed.
+
+Version 6.0
+-----------
+
+(codename "pow pow", released on November 24th 2015)
+
+- Optimized the progressbar rendering to not render when it did not
+  actually change.
+- Explicitly disallow nargs=-1 with a set default.
+- The context is now closed before it's popped from the stack.
+- Added support for short aliases for the false flag on toggles.
+- Click will now attempt to aid you with debugging locale errors
+  better by listing with the help of the OS what locales are
+  available.
+- Click used to return byte strings on Python 2 in some unit-testing
+  situations.  This has been fixed to correctly return unicode strings
+  now.
+- For Windows users on Python 2, Click will now handle Unicode more
+  correctly handle Unicode coming in from the system.  This also has
+  the disappointing side effect that filenames will now be always
+  unicode by default in the `Path` type which means that this can
+  introduce small bugs for code not aware of this.
+- Added a `type` parameter to `Path` to force a specific string type
+  on the value.
+- For users running Python on Windows the `echo`) and `prompt` functions
+  now work with full unicode functionality in the Python windows console
+  by emulating an output stream.  This also applies to getting the
+  virtual output and input streams via `click.get_text_stream(...)`.
+- Unittests now always force a certain virtual terminal width.
+- Added support for allowing dashes to indicate standard streams to the
+  `Path` type.
+- Multi commands in chain mode no longer propagate arguments left over
+  from parsing to the callbacks.  It's also now disallowed through an
+  exception when optional arguments are attached to multi commands if chain
+  mode is enabled.
+- Relaxed restriction that disallowed chained commands to have other
+  chained commands as child commands.
+- Arguments with positive nargs can now have defaults implemented.
+  Previously this configuration would often result in slightly unexpected
+  values be returned.
+
 Version 5.1
 -----------
 

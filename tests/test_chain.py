@@ -1,4 +1,13 @@
+import sys
 import click
+import pytest
+
+
+def debug():
+    click.echo('%s=%s' % (
+        sys._getframe(1).f_code.co_name,
+        '|'.join(click.get_current_context().args),
+    ))
 
 
 def test_basic_chaining(runner):
@@ -151,4 +160,93 @@ def test_pipeline(runner):
     assert result.output.splitlines() == [
         'FOO',
         'BAR',
+    ]
+
+
+def test_args_and_chain(runner):
+    @click.group(chain=True)
+    def cli():
+        debug()
+
+    @cli.command()
+    def a():
+        debug()
+
+    @cli.command()
+    def b():
+        debug()
+
+    @cli.command()
+    def c():
+        debug()
+
+    result = runner.invoke(cli, ['a', 'b', 'c'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'cli=',
+        'a=',
+        'b=',
+        'c=',
+    ]
+
+
+def test_multicommand_arg_behavior(runner):
+    with pytest.raises(RuntimeError):
+        @click.group(chain=True)
+        @click.argument('forbidden', required=False)
+        def bad_cli():
+            pass
+
+    with pytest.raises(RuntimeError):
+        @click.group(chain=True)
+        @click.argument('forbidden', nargs=-1)
+        def bad_cli2():
+            pass
+
+    @click.group(chain=True)
+    @click.argument('arg')
+    def cli(arg):
+        click.echo('cli:%s' % arg)
+
+    @cli.command()
+    def a():
+        click.echo('a')
+
+    result = runner.invoke(cli, ['foo', 'a'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'cli:foo',
+        'a',
+    ]
+
+
+@pytest.mark.xfail
+def test_multicommand_chaining(runner):
+    @click.group(chain=True)
+    def cli():
+        debug()
+
+    @cli.group()
+    def l1a():
+        debug()
+
+    @l1a.command()
+    def l2a():
+        debug()
+
+    @l1a.command()
+    def l2b():
+        debug()
+
+    @cli.command()
+    def l1b():
+        debug()
+
+    result = runner.invoke(cli, ['l1a', 'l2a', 'l1b'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'cli=',
+        'l1a=',
+        'l2a=',
+        'l1b=',
     ]
