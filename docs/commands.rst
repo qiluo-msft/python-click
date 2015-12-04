@@ -310,7 +310,8 @@ Now you can invoke it like this:
     invoke(cli, prog_name='setup.py', args=['sdist', 'bdist_wheel'])
 
 When using multi command chaining you can only have one command (the last)
-use ``nargs=-1`` on an argument.  Other than that there are no
+use ``nargs=-1`` on an argument.  It is also not possible to nest multi
+commands below chained multicommands.  Other than that there are no
 restrictions on how they work.  They can accept options and arguments as
 normal.
 
@@ -319,6 +320,11 @@ useless for multi commands as it will give ``'*'`` as value if more than
 one command is invoked.  This is necessary because the handling of
 subcommands happens one after another so the exact subcommands that will
 be handled are not yet available when the callback fires.
+
+.. note::
+
+    It is currently not possible for chain commands to be nested.  This
+    will be fixed in future versions of Click.
 
 
 Multi Command Pipelines

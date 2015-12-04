@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
+from click._compat import PY2
 
 
 def test_nargs_star(runner):
@@ -16,6 +17,18 @@ def test_nargs_star(runner):
         'src=foo.txt|bar.txt',
         'dst=dir',
     ]
+
+
+def test_nargs_default(runner):
+    try:
+        @click.command()
+        @click.argument('src', nargs=-1, default=42)
+        def copy(src):
+            pass
+    except TypeError as e:
+        assert 'nargs=-1' in str(e)
+    else:
+        assert False
 
 
 def test_nargs_tup(runner):
@@ -106,7 +119,8 @@ def test_file_atomics(runner):
     with runner.isolated_filesystem():
         with open('foo.txt', 'wb') as f:
             f.write(b'OLD\n')
-        result = runner.invoke(inout, ['foo.txt'], input='Hey!')
+        result = runner.invoke(inout, ['foo.txt'], input='Hey!',
+        catch_exceptions=False)
         assert result.output == ''
         assert result.exit_code == 0
         with open('foo.txt', 'rb') as f:
@@ -223,7 +237,7 @@ def test_nargs_star_ordering(runner):
 
     result = runner.invoke(cmd, ['a', 'b', 'c'])
     assert result.output.splitlines() == [
-        "('a',)",
+        PY2 and "(u'a',)" or "('a',)",
         'b',
         'c',
     ]
@@ -240,7 +254,25 @@ def test_nargs_specified_plus_star_ordering(runner):
 
     result = runner.invoke(cmd, ['a', 'b', 'c', 'd', 'e', 'f'])
     assert result.output.splitlines() == [
-        "('a', 'b', 'c')",
+        PY2 and "(u'a', u'b', u'c')" or "('a', 'b', 'c')",
         'd',
-        "('e', 'f')",
+        PY2 and "(u'e', u'f')" or "('e', 'f')",
     ]
+
+
+def test_defaults_for_nargs(runner):
+    @click.command()
+    @click.argument('a', nargs=2, type=int, default=(1, 2))
+    def cmd(a):
+        x, y = a
+        click.echo(x + y)
+
+    result = runner.invoke(cmd, [])
+    assert result.output.strip() == '3'
+
+    result = runner.invoke(cmd, ['3', '4'])
+    assert result.output.strip() == '7'
+
+    result = runner.invoke(cmd, ['3'])
+    assert result.exception is not None
+    assert 'argument a takes 2 values' in result.output

@@ -201,6 +201,29 @@ can alternatively split the parameters through ``;`` instead:
     if __name__ == '__main__':
         log()
 
+.. versionchanged:: 6.0
+
+If you want to define an alias for the second option only, then you will
+need to use leading whitespace to disambiguate the format string:
+
+Example:
+
+.. click:example::
+
+    import sys
+
+    @click.command()
+    @click.option('--shout/--no-shout', ' /-S', default=False)
+    def info(shout):
+        rv = sys.platform
+        if shout:
+            rv = rv.upper() + '!!!!111'
+        click.echo(rv)
+
+.. click:run::
+
+    invoke(info, args=['--help'])
+
 Feature Switches
 ----------------
 
@@ -445,7 +468,7 @@ replaced with the :func:`confirmation_option` decorator:
 .. click:example::
 
     @click.command()
-    @click.confirmation_option(help='Are you sure you want to drop the db?')
+    @click.confirmation_option(prompt='Are you sure you want to drop the db?')
     def dropdb():
         click.echo('Dropped all tables!')
 
