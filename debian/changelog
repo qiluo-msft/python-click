@@ -1,3 +1,9 @@
+python-click (6.2-2) unstable; urgency=medium
+
+  * Fixed locale detection error (Closes: #812713)
+
+ -- Alexandre Viau <aviau@debian.org>  Tue, 26 Jan 2016 09:33:30 -0500
+
 python-click (6.2-1) unstable; urgency=medium
 
   * New upstream release
