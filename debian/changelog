@@ -1,7 +1,11 @@
 python-click (6.4-1) unstable; urgency=medium
 
+  [ Adrian Alves ]
   * New upstream release
   * upstream fixed debian patch fix-locale-check.patch
+
+  [ Alexandre Viau ]
+  * Changed version to 6.6
 
  -- Adrian Alves <aalves@gmail.com>  Fri, 25 Mar 2016 09:33:30 -0500
 
