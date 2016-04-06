@@ -7,6 +7,7 @@ python-click (6.4-1) unstable; urgency=medium
   [ Alexandre Viau ]
   * Changed version to 6.6
   * Changed Vcs-Browser and Vcs-Git to secure (https) urls
+  * Bumped Standards-Version to 3.9.7
 
  -- Adrian Alves <aalves@gmail.com>  Fri, 25 Mar 2016 09:33:30 -0500
 
