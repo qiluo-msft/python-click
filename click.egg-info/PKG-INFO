@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: click
-Version: 6.2
+Version: 6.6
 Summary: A simple wrapper around optparse for powerful command line utilities.
 Home-page: http://github.com/mitsuhiko/click
 Author: Armin Ronacher
