@@ -1,3 +1,10 @@
+python-click (6.4-1) unstable; urgency=medium
+
+  * New upstream release
+  * upstream fixed debian patch fix-locale-check.patch
+
+ -- Adrian Alves <aalves@gmail.com>  Fri, 25 Mar 2016 09:33:30 -0500
+
 python-click (6.2-2) unstable; urgency=medium
 
   * Fixed locale detection error (Closes: #812713)
