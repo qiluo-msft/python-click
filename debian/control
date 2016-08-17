@@ -18,6 +18,7 @@ Standards-Version: 3.9.7
 Vcs-Git: https://anonscm.debian.org/git/collab-maint/python-click.git
 Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/python-click.git
 Homepage: https://github.com/mitsuhiko/click
+Testsuite: autopkgtest-pkg-python
 
 Package: python-click
 Architecture: all

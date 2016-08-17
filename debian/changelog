@@ -1,3 +1,9 @@
+python-click (6.6-2) UNRELEASED; urgency=medium
+
+  * Enabled autopkgtest-pkg-python testsuite
+
+ -- Ondřej Nový <onovy@debian.org>  Wed, 17 Aug 2016 10:29:28 +0200
+
 python-click (6.6-1) unstable; urgency=medium
 
   [ Adrian Alves ]
