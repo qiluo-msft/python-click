@@ -1,6 +1,7 @@
 python-click (6.6-2) UNRELEASED; urgency=medium
 
   * Enabled autopkgtest-pkg-python testsuite
+  * Standards-Version is 3.9.8 now (no changes needed)
 
  -- Ondřej Nový <onovy@debian.org>  Wed, 17 Aug 2016 10:29:28 +0200
 
