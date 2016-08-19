@@ -1,3 +1,9 @@
+python-click (6.6-1~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- Ondřej Nový <onovy@debian.org>  Fri, 19 Aug 2016 21:42:54 +0200
+
 python-click (6.6-1) unstable; urgency=medium
 
   [ Adrian Alves ]
