@@ -1,8 +1,12 @@
 python-click (6.6-2) UNRELEASED; urgency=medium
 
+  [ Ondřej Nový ]
   * Enabled autopkgtest-pkg-python testsuite
   * Standards-Version is 3.9.8 now (no changes needed)
   * d/watch: Use https protocol
+
+  [ Alexandre Viau ]
+  * d/watch: exclude dev versions
 
  -- Ondřej Nový <onovy@debian.org>  Wed, 17 Aug 2016 10:29:28 +0200
 
