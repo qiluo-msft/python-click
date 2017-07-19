@@ -1,4 +1,4 @@
-python-click (6.7-1) UNRELEASED; urgency=medium
+python-click (6.7-1) unstable; urgency=medium
 
   [ Ondřej Nový ]
   * Enabled autopkgtest-pkg-python testsuite
@@ -10,7 +10,7 @@ python-click (6.7-1) UNRELEASED; urgency=medium
   * d/watch: exclude dev versions
   * Create skip_test_legacy_callbacks.patch (Closes: #868816)
 
- -- Ondřej Nový <onovy@debian.org>  Wed, 17 Aug 2016 10:29:28 +0200
+ -- Alexandre Viau <aviau@debian.org>  Wed, 19 Jul 2017 14:22:51 -0400
 
 python-click (6.6-1) unstable; urgency=medium
 
