@@ -8,6 +8,7 @@ python-click (6.7-1) UNRELEASED; urgency=medium
   [ Alexandre Viau ]
   * New upstream version (Closes: #856581)
   * d/watch: exclude dev versions
+  * Create skip_test_legacy_callbacks.patch (Closes: #868816)
 
  -- Ondřej Nový <onovy@debian.org>  Wed, 17 Aug 2016 10:29:28 +0200
 
