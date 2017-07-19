@@ -6,6 +6,7 @@ python-click (6.7-1) UNRELEASED; urgency=medium
   * d/watch: Use https protocol
 
   [ Alexandre Viau ]
+  * New upstream version (Closes: #856581)
   * d/watch: exclude dev versions
 
  -- Ondřej Nový <onovy@debian.org>  Wed, 17 Aug 2016 10:29:28 +0200
