@@ -15,8 +15,8 @@ Build-Depends-Indep: python-requests,
                      python3-pytest,
                      python3-colorama
 Standards-Version: 3.9.8
-Vcs-Git: https://anonscm.debian.org/git/collab-maint/python-click.git
 Vcs-Browser: https://salsa.debian.org/debian/python-click
+Vcs-Git: https://salsa.debian.org/debian/python-click.git
 Homepage: https://salsa.debian.org/debian/python-click.git
 Testsuite: autopkgtest-pkg-python
 

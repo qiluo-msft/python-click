@@ -1,3 +1,9 @@
+python-click (6.7-3) unstable; urgency=medium
+
+  * Fix dead VCS-Git URL.
+
+ -- Alexandre Viau <aviau@debian.org>  Sun, 07 Jan 2018 13:59:09 -0500
+
 python-click (6.7-2) unstable; urgency=medium
 
   * Move to salsa.debian.org.
