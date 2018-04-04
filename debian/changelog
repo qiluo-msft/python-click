@@ -1,3 +1,12 @@
+python-click (6.7-3.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Ship documentation subpackage (Closes: #844432).
+  * Reduce short description length.
+  * Declare compliance with Debian policy 4.1.3.
+
+ -- Athos Ribeiro <athoscribeiro@gmail.com>  Fri, 23 Mar 2018 23:25:00 +0000
+
 python-click (6.7-3) unstable; urgency=medium
 
   * Fix dead VCS-Git URL.
