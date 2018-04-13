@@ -1,3 +1,9 @@
+python-click (6.7-4) unstable; urgency=medium
+
+  * Correct homepage field (Closes: #895277).
+
+ -- Alexandre Viau <aviau@debian.org>  Fri, 13 Apr 2018 09:12:35 -0400
+
 python-click (6.7-3.1) unstable; urgency=medium
 
   * Non-maintainer upload.
