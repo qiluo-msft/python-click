@@ -12,10 +12,6 @@ export SOURCE = $(CURDIR)/debian/
 %:
 	dh $@ --with python2,python3,sphinxdoc --buildsystem=pybuild
 
-override_dh_auto_configure:
-	dh_auto_configure
-	rm -rf artwork/.DS_STORE
-
 override_dh_auto_clean:
 	dh_auto_clean
 	$(MAKE) -C docs clean
