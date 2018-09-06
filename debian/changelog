@@ -1,3 +1,9 @@
+python-click (6.7+git20180829-1) UNRELEASED; urgency=medium
+
+  * New upstream snapshot.
+
+ -- Alexandre Viau <aviau@debian.org>  Thu, 06 Sep 2018 14:55:26 -0400
+
 python-click (6.7-5) unstable; urgency=medium
 
   * Sphinx 1.7 support. (Closes: #896630)
