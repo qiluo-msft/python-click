@@ -47,8 +47,8 @@ different behavior and some are supported out of the box:
 
 ``bool`` / :data:`click.BOOL`:
     A parameter that accepts boolean values.  This is automatically used
-    for boolean flags.  If used with string values ``1``, ``yes``, ``y``
-    and ``true`` convert to `True` and ``0``, ``no``, ``n`` and ``false``
+    for boolean flags.  If used with string values ``1``, ``yes``, ``y``, ``t``
+    and ``true`` convert to `True` and ``0``, ``no``, ``n``, ``f`` and ``false``
     convert to `False`.
 
 :data:`click.UUID`:
@@ -67,25 +67,41 @@ different behavior and some are supported out of the box:
 .. autoclass:: IntRange
    :noindex:
 
+.. autoclass:: FloatRange
+  :noindex:
+
 Custom parameter types can be implemented by subclassing
 :class:`click.ParamType`.  For simple cases, passing a Python function that
 fails with a `ValueError` is also supported, though discouraged.
 
+.. _parameter_names:
+
 Parameter Names
 ---------------
 
-Parameters (both options and arguments) accept a number of positional
-arguments which are the parameter declarations.  Each string with a
-single dash is added as short argument; each string starting with a double
-dash as long one.  If a string is added without any dashes, it becomes the
-internal parameter name which is also used as variable name.
+Parameters (both options and arguments) accept a number of positional arguments
+which are passed to the command function as parameters. Each string with a
+single dash is added as a short argument; each string starting with a double
+dash as a long one.
 
-If a parameter is not given a name without dashes, a name is generated
+If a string is added without any dashes, it becomes the internal parameter name
+which is also used as variable name.
+
+If all names for a parameter contain dashes, the internal name is generated
 automatically by taking the longest argument and converting all dashes to
-underscores.  For an option with ``('-f', '--foo-bar')``, the parameter
-name is `foo_bar`.  For an option with ``('-x',)``, the parameter is `x`.
-For an option with ``('-f', '--filename', 'dest')``, the parameter is
-called `dest`.
+underscores.
+
+The internal name is converted to lowercase.
+
+Examples:
+
+* For an option with ``('-f', '--foo-bar')``, the parameter name is `foo_bar`.
+* For an option with ``('-x',)``, the parameter is `x`.
+* For an option with ``('-f', '--filename', 'dest')``, the parameter name is  `dest`.
+* For an option with ``('--CamelCaseOption',)``, the parameter is `camelcaseoption`.
+* For an arguments with ``(`foogle`)``, the parameter name is `foogle`. To
+  provide a different human readable name for use in help text, see the section
+  about :ref:`doc-meta-variables`.
 
 Implementing Custom Types
 -------------------------

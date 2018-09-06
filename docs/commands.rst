@@ -29,7 +29,7 @@ when an inner command runs:
 
     @cli.command()
     def sync():
-        click.echo('Synching')
+        click.echo('Syncing')
 
 Here is what this looks like:
 
@@ -87,6 +87,10 @@ script like this:
     @click.option('--debug/--no-debug', default=False)
     @click.pass_context
     def cli(ctx, debug):
+        # ensure that ctx.obj exists and is a dict (in case `cli()` is called
+        # by means other than the `if` block below
+        ctx.ensure_object(dict)
+
         ctx.obj['DEBUG'] = debug
 
     @cli.command()
@@ -417,7 +421,7 @@ to not use the file type and manually open the file through
 
 For a more complex example that also improves upon handling of the
 pipelines have a look at the `imagepipe multi command chaining demo
-<https://github.com/mitsuhiko/click/tree/master/examples/imagepipe>`__ in
+<https://github.com/pallets/click/tree/master/examples/imagepipe>`__ in
 the Click repository.  It implements a pipeline based image editing tool
 that has a nice internal structure for the pipelines.
 
@@ -437,7 +441,7 @@ you're not satisfied with the defaults.
 
 The default map can be nested arbitrarily for each subcommand and
 provided when the script is invoked.  Alternatively, it can also be
-overriden at any point by commands.  For instance, a top-level command could
+overridden at any point by commands.  For instance, a top-level command could
 load the defaults from a configuration file.
 
 Example usage:
