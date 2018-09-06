@@ -1,12 +1,12 @@
-python-click (6.7+git20180829-1) UNRELEASED; urgency=medium
+python-click (6.7+git20180829-1) unstable; urgency=medium
 
   * New upstream snapshot.
   * Remove unneeded patches.
   * Depend on python3-pallets-sphinx-themes.
   * d/rules: no longer clean artwork/.
-  * d/rules: override_dh_sphinxdoc.
+  * d/rules: override_dh_sphinxdoc. (Closes: #906550)
 
- -- Alexandre Viau <aviau@debian.org>  Thu, 06 Sep 2018 14:55:26 -0400
+ -- Alexandre Viau <aviau@debian.org>  Thu, 06 Sep 2018 15:21:26 -0400
 
 python-click (6.7-5) unstable; urgency=medium
 
