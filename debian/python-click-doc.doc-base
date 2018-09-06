@@ -1,15 +1,15 @@
-Document: python-click-doc
+Document: python-click
 Title: Click Documentation
 Author: Armin Ronacher
 Abstract: Manual for Click
 Section: Programming/Python
 
 Format: text
-Files: /usr/share/doc/python-click-doc/html/_sources/*.rst.txt
+Files: /usr/share/doc/python-click/html/_sources/*.rst.txt
 
 Format: HTML
-Index: /usr/share/doc/python-click-doc/html/index.html
+Index: /usr/share/doc/python-click/html/index.html
 Files:
- /usr/share/doc/python-click-doc/html/_static/*
- /usr/share/doc/python-click-doc/html/*.html
+ /usr/share/doc/python-click/html/_static/*
+ /usr/share/doc/python-click/html/*.html
 
