@@ -1,4 +1,4 @@
-python-click (7.0-1) UNRELEASED; urgency=medium
+python-click (7.0-1) unstable; urgency=medium
 
   [ Ondřej Nový ]
   * Use 'python3 -m sphinx' instead of sphinx-build for building docs
@@ -6,7 +6,7 @@ python-click (7.0-1) UNRELEASED; urgency=medium
   [ Alexandre Viau ]
   * d/watch: support Click and click.
 
- -- Ondřej Nový <onovy@debian.org>  Mon, 01 Oct 2018 10:44:22 +0200
+ -- Alexandre Viau <aviau@debian.org>  Mon, 07 Jan 2019 11:53:07 -0500
 
 python-click (6.7+git20180829-1) unstable; urgency=medium
 
