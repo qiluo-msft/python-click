@@ -4,6 +4,7 @@ python-click (7.0-1) unstable; urgency=medium
   * Use 'python3 -m sphinx' instead of sphinx-build for building docs
 
   [ Alexandre Viau ]
+  * New upstream version. (Closes: #918561)
   * d/watch: support Click and click.
 
  -- Alexandre Viau <aviau@debian.org>  Mon, 07 Jan 2019 11:53:07 -0500
