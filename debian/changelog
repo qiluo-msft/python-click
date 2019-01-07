@@ -1,6 +1,10 @@
 python-click (6.7+git20180829-2) UNRELEASED; urgency=medium
 
+  [ Ondřej Nový ]
   * Use 'python3 -m sphinx' instead of sphinx-build for building docs
+
+  [ Alexandre Viau ]
+  * d/watch: support Click and click.
 
  -- Ondřej Nový <onovy@debian.org>  Mon, 01 Oct 2018 10:44:22 +0200
 
