@@ -1,4 +1,4 @@
-python-click (6.7+git20180829-2) UNRELEASED; urgency=medium
+python-click (7.0-1) UNRELEASED; urgency=medium
 
   [ Ondřej Nový ]
   * Use 'python3 -m sphinx' instead of sphinx-build for building docs
