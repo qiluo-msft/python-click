@@ -1,2 +1,2 @@
-Sphinx
-Pallets-Sphinx-Themes
+Sphinx~=1.8.0
+Pallets-Sphinx-Themes~=1.1.0

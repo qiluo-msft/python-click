@@ -7,7 +7,8 @@ from itertools import repeat
 from functools import update_wrapper
 
 from .types import convert_type, IntRange, BOOL
-from .utils import make_str, make_default_short_help, echo, get_os_args
+from .utils import PacifyFlushWrapper, make_str, make_default_short_help, \
+     echo, get_os_args
 from .exceptions import ClickException, UsageError, BadParameter, Abort, \
      MissingParameter, Exit
 from .termui import prompt, confirm, style
@@ -182,7 +183,8 @@ class Context(object):
                               add some safety mapping on the right.
     :param resilient_parsing: if this flag is enabled then Click will
                               parse without any interactivity or callback
-                              invocation.  This is useful for implementing
+                              invocation.  Default values will also be
+                              ignored.  This is useful for implementing
                               things such as completion support.
     :param allow_extra_args: if this is set to `True` then extra arguments
                              at the end will not raise an error and will be
@@ -312,7 +314,8 @@ class Context(object):
         self.token_normalize_func = token_normalize_func
 
         #: Indicates if resilient parsing is enabled.  In that case Click
-        #: will do its best to not cause any failures.
+        #: will do its best to not cause any failures and default values
+        #: will be ignored. Useful for completion.
         self.resilient_parsing = resilient_parsing
 
         # If there is no envvar prefix yet, but the parent has one and
@@ -325,7 +328,7 @@ class Context(object):
                 auto_envvar_prefix = '%s_%s' % (parent.auto_envvar_prefix,
                                            self.info_name.upper())
         else:
-            self.auto_envvar_prefix = auto_envvar_prefix.upper()
+            auto_envvar_prefix = auto_envvar_prefix.upper()
         self.auto_envvar_prefix = auto_envvar_prefix
 
         if color is None and parent is not None:
@@ -732,6 +735,8 @@ class BaseCommand(object):
                 sys.exit(e.exit_code)
             except IOError as e:
                 if e.errno == errno.EPIPE:
+                    sys.stdout = PacifyFlushWrapper(sys.stdout)
+                    sys.stderr = PacifyFlushWrapper(sys.stderr)
                     sys.exit(1)
                 else:
                     raise
@@ -1177,7 +1182,7 @@ class MultiCommand(Command):
         # an option we want to kick off parsing again for arguments to
         # resolve things like --help which now should go to the main
         # place.
-        if cmd is None:
+        if cmd is None and not ctx.resilient_parsing:
             if split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
             ctx.fail('No such command "%s".' % original_cmd_name)
@@ -1351,7 +1356,7 @@ class Parameter(object):
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
-        self.autocompletion =  autocompletion
+        self.autocompletion = autocompletion
 
     @property
     def human_readable_name(self):
@@ -1381,7 +1386,6 @@ class Parameter(object):
 
     def add_to_parser(self, parser, ctx):
         pass
-
 
     def consume_value(self, ctx, opts):
         value = opts.get(self.name)
@@ -1433,7 +1437,7 @@ class Parameter(object):
     def full_process_value(self, ctx, value):
         value = self.process_value(ctx, value)
 
-        if value is None:
+        if value is None and not ctx.resilient_parsing:
             value = self.get_default(ctx)
 
         if self.required and self.value_is_missing(value):
@@ -1832,11 +1836,9 @@ class Argument(Parameter):
         if len(decls) == 1:
             name = arg = decls[0]
             name = name.replace('-', '_').lower()
-        elif len(decls) == 2:
-            name, arg = decls
         else:
-            raise TypeError('Arguments take exactly one or two '
-                            'parameter declarations, got %d' % len(decls))
+            raise TypeError('Arguments take exactly one '
+                            'parameter declaration, got %d' % len(decls))
         return name, [arg], []
 
     def get_usage_pieces(self, ctx):
