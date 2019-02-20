@@ -13,7 +13,7 @@ export SOURCE = $(CURDIR)/debian/
 	dh $@ --with python2,python3,sphinxdoc --buildsystem=pybuild
 
 override_dh_sphinxdoc:
-ifeq (,$(findstring nodocs, $(DEB_BUILD_OPTIONS)))
+ifeq (,$(findstring nodoc, $(DEB_BUILD_OPTIONS)))
 	http_proxy='http://127.0.0.1:9/' PYTHONPATH=. python3 -m sphinx -N -q -E -b html docs/ debian/python-click-doc/usr/share/doc/python-click/html/
 	dh_sphinxdoc
 endif
